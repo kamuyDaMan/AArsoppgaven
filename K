@@ -1,0 +1,38 @@
+// Display existing comments
+            if (!empty($row['comment_text'])) {
+                echo "<ul>";
+                echo "<li>{$row['comment_text']}</li>";
+                echo "</ul>";
+            }
+
+            // Add textarea for new comment
+            echo "<textarea id='comment_{$row['id']}'></textarea><br>";
+            echo "<button onclick='saveComment({$row['id']})'>Save Comment</button>";
+            
+            echo "</td>";
+            echo "</tr>";
+        }
+
+        echo "</table>";
+    } else {
+        echo "<p>No cases found</p>";
+    }
+    ?>
+
+    <script>
+        function saveComment(id) {
+            var comment = document.getElementById('comment_' + id).value;
+
+            // Send the comment data to the server (you need to implement this part using AJAX or form submission)
+            // For simplicity, I'm just logging the comment to the console here
+            console.log('Comment for Case ' + id + ': ' + comment);
+
+            // Update the UI to show the new comment (you might use AJAX to update the database and fetch updated data)
+            var ul = document.createElement('ul');
+            var li = document.createElement('li');
+            li.appendChild(document.createTextNode(comment));
+            ul.appendChild(li);
+
+            var commentsContainer = document.querySelector('td #comment_' + id);
+            commentsContainer.innerHTML = '';
+            commentsContainer.appendChild(ul);
