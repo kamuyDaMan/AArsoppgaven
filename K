@@ -1,3 +1,10 @@
+// Fetch data and comments from the database
+$sql = "SELECT data.*, comments.comment_text FROM `data`
+        LEFT JOIN comments ON data.id = comments.case_id
+        ORDER BY data.id DESC";
+$result = $con->query($sql);
+
+
 // Display existing comments
             if (!empty($row['comment_text'])) {
                 echo "<ul>";
