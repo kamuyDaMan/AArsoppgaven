@@ -1,14 +1,49 @@
+<?php
+$con = new mysqli('localhost', 'root', '', 'saker');
+
+if ($con->connect_error) {
+    die("Connection failed: " . $con->connect_error);
+}
+
 // Fetch data and comments from the database
-$sql = "SELECT data.*, comments.comment_text FROM `data`
+$sql = "SELECT data.*, comments.kommentarikt FROM `data`
         LEFT JOIN comments ON data.id = comments.case_id
         ORDER BY data.id DESC";
 $result = $con->query($sql);
 
+// Close the database connection
+$con->close();
+?>
 
-// Display existing comments
-            if (!empty($row['comment_text'])) {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submitted Cases</title>
+    <!-- The rest of your styling and head content -->
+</head>
+<body>
+
+    <h2>Submitted Cases</h2>
+
+    <?php
+    if ($result->num_rows > 0) {
+        echo "<table>";
+        echo "<tr><th>ID</th><th>Email</th><th>Name</th><th>Class</th><th>Comments</th></tr>";
+
+        while ($row = $result->fetch_assoc()) {
+            echo "<tr>";
+            echo "<td>{$row['id']}</td>";
+            echo "<td>{$row['epost']}</td>";
+            echo "<td>{$row['navnogetternavn']}</td>";
+            echo "<td>{$row['klasse']}</td>";
+            echo "<td>";
+
+            // Display existing comments
+            if (!empty($row['kommentarikt'])) {
                 echo "<ul>";
-                echo "<li>{$row['comment_text']}</li>";
+                echo "<li>{$row['kommentarikt']}</li>";
                 echo "</ul>";
             }
 
@@ -43,3 +78,8 @@ $result = $con->query($sql);
             var commentsContainer = document.querySelector('td #comment_' + id);
             commentsContainer.innerHTML = '';
             commentsContainer.appendChild(ul);
+        }
+    </script>
+
+</body>
+</html>
