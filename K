@@ -1,15 +1,44 @@
 <?php
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $con = new mysqli('localhost', 'root', '', 'saker');
+
+    if ($con->connect_error) {
+        die("Connection failed: " . $con->connect_error);
+    }
+
+    $caseId = $_POST['case_id'];
+    $newComment = $_POST['new_comment'];
+
+    $sql = "UPDATE `data` SET `kommentar` = '$newComment' WHERE `id` = '$caseId'";
+    $result = $con->query($sql);
+
+    if ($result === false) {
+        die("Error updating comment: " . $con->error);
+    }
+
+    $con->close();
+}
+?>
+
+
+
+
+
+
+
+<?php
 $con = new mysqli('localhost', 'root', '', 'saker');
 
 if ($con->connect_error) {
     die("Connection failed: " . $con->connect_error);
 }
 
-// Fetch data and comments from the database
-$sql = "SELECT data.*, comments.kommentarikt FROM `data`
-        LEFT JOIN comments ON data.id = comments.case_id
-        ORDER BY data.id DESC";
+// Fetch data from the database
+$sql = "SELECT * FROM `data` ORDER BY id DESC";
 $result = $con->query($sql);
+
+// Count the number of cases
+$caseCount = $result->num_rows;
 
 // Close the database connection
 $con->close();
@@ -20,17 +49,52 @@ $con->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submitted Cases</title>
-    <!-- The rest of your styling and head content -->
+    <title>Meldte inn</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h2 {
+            color: #4caf50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4caf50;
+            color: white;
+        }
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
-    <h2>Submitted Cases</h2>
+    <h2>Submitted Cases - <?php echo $caseCount; ?> Cases to Solve</h2>
 
     <?php
     if ($result->num_rows > 0) {
         echo "<table>";
-        echo "<tr><th>ID</th><th>Email</th><th>Name</th><th>Class</th><th>Comments</th></tr>";
+        echo "<tr><th>ID</th><th>Email</th><th>Name</th><th>Class</th><th>Comment</th></tr>";
 
         while ($row = $result->fetch_assoc()) {
             echo "<tr>";
@@ -38,20 +102,9 @@ $con->close();
             echo "<td>{$row['epost']}</td>";
             echo "<td>{$row['navnogetternavn']}</td>";
             echo "<td>{$row['klasse']}</td>";
-            echo "<td>";
-
-            // Display existing comments
-            if (!empty($row['kommentarikt'])) {
-                echo "<ul>";
-                echo "<li>{$row['kommentarikt']}</li>";
-                echo "</ul>";
-            }
-
-            // Add textarea for new comment
-            echo "<textarea id='comment_{$row['id']}'></textarea><br>";
-            echo "<button onclick='saveComment({$row['id']})'>Save Comment</button>";
-            
-            echo "</td>";
+            echo "<td><div id='comment_{$row['id']}'>{$row['kommentar']}</div></td>";
+            echo "<td><textarea id='newComment_{$row['id']}'></textarea><br>";
+            echo "<button onclick='saveComment({$row['id']})'>Save Comment</button></td>";
             echo "</tr>";
         }
 
@@ -63,21 +116,20 @@ $con->close();
 
     <script>
         function saveComment(id) {
-            var comment = document.getElementById('comment_' + id).value;
+            var newComment = document.getElementById('newComment_' + id).value;
 
-            // Send the comment data to the server (you need to implement this part using AJAX or form submission)
-            // For simplicity, I'm just logging the comment to the console here
-            console.log('Comment for Case ' + id + ': ' + comment);
-
-            // Update the UI to show the new comment (you might use AJAX to update the database and fetch updated data)
-            var ul = document.createElement('ul');
-            var li = document.createElement('li');
-            li.appendChild(document.createTextNode(comment));
-            ul.appendChild(li);
-
-            var commentsContainer = document.querySelector('td #comment_' + id);
-            commentsContainer.innerHTML = '';
-            commentsContainer.appendChild(ul);
+            // Send the comment data to the server using AJAX
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    // Update the UI to show the new comment
+                    document.getElementById('comment_' + id).innerHTML = newComment;
+                    console.log('Comment for Case ' + id + ' saved: ' + newComment);
+                }
+            };
+            xhr.open('POST', 'save_comment.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send('case_id=' + id + '&new_comment=' + encodeURIComponent(newComment));
         }
     </script>
 
